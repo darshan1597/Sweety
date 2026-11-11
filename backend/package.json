@@ -7,6 +7,11 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "db:migrate": "node db/migrate.js up",
+    "db:rollback": "node db/migrate.js down",
+    "db:status": "node db/migrate.js status",
+    "db:verify": "node db/verifySchema.js",
+    "auth:verify": "node db/verifyAuth.js",
     "test": "cross-env NODE_ENV=test jest --runInBand"
   },
   "dependencies": {

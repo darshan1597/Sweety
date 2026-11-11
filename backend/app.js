@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+import authRouter from './routes/auth.routes.js'
 import healthRouter from './routes/health.routes.js'
 
 const app = express()
@@ -13,6 +14,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/health', healthRouter)
+app.use('/api/auth', authRouter)
 
 app.use((_request, response) => {
   response.status(404).json({ message: 'API endpoint not found.' })
