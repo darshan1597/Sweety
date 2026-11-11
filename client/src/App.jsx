@@ -5,6 +5,7 @@ import NotFound from './pages/NotFound.jsx'
 import Reports from './pages/Reports.jsx'
 import SessionExpired from './pages/SessionExpired.jsx'
 import Signup from './pages/Signup.jsx'
+import ProtectedRoute from './pages/components/ProtectedRoute.jsx'
 
 function App() {
   return (
@@ -12,8 +13,10 @@ function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/reports" element={<Reports />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/reports" element={<Reports />} />
+      </Route>
       <Route path="/session-expired" element={<SessionExpired />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
