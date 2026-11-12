@@ -11,6 +11,7 @@
     "db:rollback": "node db/migrate.js down",
     "db:status": "node db/migrate.js status",
     "db:verify": "node db/verifySchema.js",
+    "db:seed": "node db/seed.js",
     "auth:verify": "node db/verifyAuth.js",
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
