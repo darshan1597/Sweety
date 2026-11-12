@@ -3,8 +3,14 @@ import cors from 'cors'
 import express from 'express'
 import authRouter from './routes/auth.routes.js'
 import healthRouter from './routes/health.routes.js'
+import readingRouter from './routes/reading.routes.js'
 
 const app = express()
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`)
+  next()
+})
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -15,6 +21,7 @@ app.use(cookieParser())
 
 app.use('/api/health', healthRouter)
 app.use('/api/auth', authRouter)
+app.use('/api/readings', readingRouter)
 
 app.use((_request, response) => {
   response.status(404).json({ message: 'API endpoint not found.' })

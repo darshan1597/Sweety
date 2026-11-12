@@ -12,7 +12,7 @@
     "db:status": "node db/migrate.js status",
     "db:verify": "node db/verifySchema.js",
     "auth:verify": "node db/verifyAuth.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand"
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
