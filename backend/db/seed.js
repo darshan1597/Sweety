@@ -10,22 +10,35 @@ const slots = ['morning_fasting', 'after_breakfast', 'after_lunch', 'after_dinne
 const localToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date())
 const asDate = (value) => new Date(`${value}T00:00:00Z`)
 const iso = (date) => date.toISOString().slice(0, 10)
-const shiftDays = (value, amount) => { const date = asDate(value); date.setUTCDate(date.getUTCDate() + amount); return iso(date) }
-const previousMonthDate = (day) => { const date = asDate(localToday()); return iso(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - 1, day))) }
+const readingsForDay = (day, monthOffset = 0) => [
+  Math.round(94 + Math.sin((day + monthOffset) / 3) * 7),
+  Math.round(132 + Math.sin((day + monthOffset) / 4) * 15),
+  Math.round(116 + Math.cos((day + monthOffset) / 3) * 10),
+  Math.round(127 + Math.cos((day + monthOffset) / 5) * 12),
+]
 
 const buildReadings = () => {
   const today = localToday()
-  const monthStart = `${today.slice(0, 7)}-01`
-  return [
-    [today, slots[0], 98], [today, slots[1], 132], [today, slots[2], 118],
-    [shiftDays(today, -1), slots[0], 101], [shiftDays(today, -1), slots[1], 126], [shiftDays(today, -1), slots[2], 121], [shiftDays(today, -1), slots[3], 137],
-    [shiftDays(today, -3), slots[0], 95], [shiftDays(today, -3), slots[1], 140], [shiftDays(today, -3), slots[3], 129],
-    [monthStart, slots[0], 104], [monthStart, slots[1], 148], [monthStart, slots[2], 115], [monthStart, slots[3], 134],
-    [previousMonthDate(3), slots[0], 92], [previousMonthDate(3), slots[1], 142], [previousMonthDate(3), slots[2], 119], [previousMonthDate(3), slots[3], 131],
-    [previousMonthDate(10), slots[0], 88], [previousMonthDate(10), slots[1], 156], [previousMonthDate(10), slots[2], 124], [previousMonthDate(10), slots[3], 139],
-    [previousMonthDate(18), slots[0], 97], [previousMonthDate(18), slots[1], 145], [previousMonthDate(18), slots[2], 116], [previousMonthDate(18), slots[3], 128],
-    [previousMonthDate(26), slots[0], 93], [previousMonthDate(26), slots[1], 151], [previousMonthDate(26), slots[2], 120], [previousMonthDate(26), slots[3], 136],
-  ]
+  const current = asDate(today)
+  const year = current.getUTCFullYear()
+  const month = current.getUTCMonth()
+  const currentDay = current.getUTCDate()
+  const previousMonthEnd = new Date(Date.UTC(year, month, 0))
+  const readings = []
+
+  for (let day = 1; day <= previousMonthEnd.getUTCDate(); day += 1) {
+    const readingDate = iso(new Date(Date.UTC(previousMonthEnd.getUTCFullYear(), previousMonthEnd.getUTCMonth(), day)))
+    readingsForDay(day, 4).forEach((value, index) => readings.push([readingDate, slots[index], value]))
+  }
+
+  for (let day = 1; day <= currentDay; day += 1) {
+    const readingDate = iso(new Date(Date.UTC(year, month, day)))
+    const values = readingsForDay(day)
+    const slotCount = day === currentDay ? 3 : 4
+    for (let index = 0; index < slotCount; index += 1) readings.push([readingDate, slots[index], values[index]])
+  }
+
+  return readings
 }
 
 const seed = async () => {

@@ -14,6 +14,12 @@ const slotInfo = {
   after_dinner: { label: 'After dinner', icon: Moon, color: 'text-violet-700' },
 }
 const slotOrder = { morning_fasting: 1, after_breakfast: 2, after_lunch: 3, after_dinner: 4 }
+const chartSeries = [
+  { key: 'morning_fasting', label: 'Morning', stroke: '#f59e0b', dot: 'bg-amber-500', active: 'border-amber-400 bg-amber-50 text-amber-800' },
+  { key: 'after_breakfast', label: 'After breakfast', stroke: '#ef4444', dot: 'bg-red-500', active: 'border-red-400 bg-red-50 text-red-800' },
+  { key: 'after_lunch', label: 'After lunch', stroke: '#10b981', dot: 'bg-emerald-500', active: 'border-emerald-400 bg-emerald-50 text-emerald-800' },
+  { key: 'after_dinner', label: 'After dinner', stroke: '#6d28d9', dot: 'bg-violet-600', active: 'border-violet-400 bg-violet-50 text-violet-800' },
+]
 const iso = (date) => date.toISOString().slice(0, 10)
 const shiftDate = (value, amount, byMonth = false) => { const date = new Date(`${value}T00:00:00Z`); if (byMonth) date.setUTCMonth(date.getUTCMonth() + amount); else date.setUTCDate(date.getUTCDate() + amount); return iso(date) }
 const formatDate = (value, weekday = false) => {
@@ -59,16 +65,20 @@ function Reports() {
 function State({ icon, title, message, spinning = false, children }) { return <section className="mt-7 rounded-2xl border border-violet-200 bg-white p-12 text-center"><span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-violet-700">{createElement(icon, { className: `h-9 w-9 ${spinning ? 'animate-spin' : ''}` })}</span><h2 className="mt-5 text-xl font-extrabold">{title}</h2><p className="mx-auto mt-2 max-w-md text-slate-600">{message}</p>{children}</section> }
 
 function MonthlyChart({ readings, range }) {
-  const data = [...readings].sort((first, second) => {
+  const [activeSeries, setActiveSeries] = useState('all')
+  const rowsByDate = new Map()
+  ;[...readings].sort((first, second) => {
     const dateDifference = String(first.reading_date).slice(0, 10).localeCompare(String(second.reading_date).slice(0, 10))
     return dateDifference || slotOrder[first.slot] - slotOrder[second.slot]
-  }).map((reading) => ({
-    date: formatShortDate(reading.reading_date),
-    details: `${formatDate(reading.reading_date)} · ${slotInfo[reading.slot].label}`,
-    value: Number(reading.value),
-  }))
+  }).forEach((reading) => {
+    const dateKey = String(reading.reading_date).slice(0, 10)
+    const row = rowsByDate.get(dateKey) || { date: formatShortDate(dateKey), fullDate: formatDate(dateKey) }
+    row[reading.slot] = Number(reading.value)
+    rowsByDate.set(dateKey, row)
+  })
+  const data = [...rowsByDate.values()]
 
-  return <section className="mt-6 rounded-2xl border border-violet-200 bg-white p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-lg font-extrabold">Glucose Trend</h2><p className="mt-1 text-sm text-slate-500">Readings across the selected month</p></div><span className="text-sm text-slate-600">{range}</span></div><div className="mt-6 h-72 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 8, right: 18, left: -18, bottom: 8 }}><CartesianGrid stroke="#ede9fe" strokeDasharray="4 4" vertical={false} /><XAxis dataKey="date" stroke="#64748b" tickLine={false} axisLine={false} minTickGap={28} /><YAxis domain={[40, 600]} stroke="#64748b" tickLine={false} axisLine={false} width={52} /><Tooltip labelFormatter={(_label, payload) => payload?.[0]?.payload?.details || ''} formatter={(value) => [`${value} mg/dl`, 'Glucose']} /><Line type="monotone" dataKey="value" stroke="#6d28d9" strokeWidth={3} dot={{ r: 4, fill: '#7c3aed', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 6 }} /></LineChart></ResponsiveContainer></div></section>
+  return <section className="mt-6 rounded-2xl border border-violet-200 bg-white p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-lg font-extrabold">Glucose Trend</h2><p className="mt-1 text-sm text-slate-500">Readings by time slot across the selected month</p></div><span className="text-sm text-slate-600">{range}</span></div><div className="mt-5 flex flex-wrap items-center gap-2" aria-label="Filter chart by time slot">{chartSeries.map((series) => <button className={`flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-bold transition ${activeSeries === series.key ? series.active : activeSeries === 'all' ? 'border-slate-200 bg-white text-slate-700 hover:border-violet-300' : 'border-slate-200 bg-white text-slate-400 hover:text-slate-700'}`} key={series.key} type="button" onClick={() => setActiveSeries(series.key)} aria-pressed={activeSeries === series.key}><span className={`h-2.5 w-2.5 rounded-full ${series.dot}`} />{series.label}</button>)}{activeSeries !== 'all' && <button className="h-9 rounded-full border border-violet-400 bg-violet-50 px-4 text-xs font-bold text-violet-700 transition hover:bg-violet-100" type="button" onClick={() => setActiveSeries('all')}>Show all readings</button>}</div><div className="mt-5 h-80 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 8, right: 18, left: -18, bottom: 8 }}><CartesianGrid stroke="#ede9fe" strokeDasharray="4 4" vertical={false} /><XAxis dataKey="date" stroke="#64748b" tickLine={false} axisLine={false} minTickGap={28} /><YAxis domain={['dataMin - 20', 'dataMax + 20']} stroke="#64748b" tickLine={false} axisLine={false} width={52} /><Tooltip labelFormatter={(_label, payload) => payload?.[0]?.payload?.fullDate || ''} formatter={(value, name) => [`${value} mg/dl`, name]} />{chartSeries.filter((series) => activeSeries === 'all' || activeSeries === series.key).map((series) => <Line key={series.key} name={series.label} type="monotone" dataKey={series.key} stroke={series.stroke} strokeWidth={3} connectNulls />)}</LineChart></ResponsiveContainer></div></section>
 }
 
 function ReadingsTable({ readings, title, showDate, range }) { return <section className="mt-6 overflow-hidden rounded-2xl border border-violet-200 bg-white p-4 sm:p-5"><div className="flex items-center justify-between"><h2 className="flex items-center gap-3 text-lg font-extrabold"><List className="h-6 w-6 text-violet-700" />{title}</h2><span className="hidden text-sm sm:block">{range}</span></div><div className={`mt-4 hidden rounded-lg bg-violet-50 px-4 py-2 text-sm font-bold lg:grid ${showDate ? 'grid-cols-[1fr_1.2fr_1fr_1fr]' : 'grid-cols-[1.2fr_1fr_1fr]'}`}>{showDate && <span>Date</span>}<span>Time Slot</span><span>Reading (mg/dl)</span><span>Recorded At</span></div><div className="divide-y divide-slate-200">{readings.map((reading) => { const info = slotInfo[reading.slot]; const Icon = info.icon; return <div className={`grid grid-cols-[1fr_auto] items-center gap-3 py-3 lg:px-4 ${showDate ? 'lg:grid-cols-[1fr_1.2fr_1fr_1fr]' : 'lg:grid-cols-[1.2fr_1fr_1fr]'}`} key={reading.id}>{showDate && <span className="hidden text-sm lg:block">{formatDate(reading.reading_date)}</span>}<div className="flex items-center gap-3"><Icon className={`h-6 w-6 ${info.color}`} /><div><p className="text-sm font-bold">{info.label}</p>{showDate && <p className="text-xs text-slate-500 lg:hidden">{formatDate(reading.reading_date)}</p>}</div></div><span className={`rounded-full px-3 py-1 text-center text-xs font-bold lg:w-[62px] ${reading.value > 125 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{reading.value}<span className="ml-1 lg:hidden">mg/dl</span></span><span className="hidden text-sm lg:block">{formatTime(reading.created_at)}</span></div>})}</div></section> }
