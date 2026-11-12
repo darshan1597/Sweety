@@ -79,7 +79,6 @@ export const register = async (request, response, next) => {
 }
 
 export const login = async (request, response, next) => {
-  console.log('LOGIN CONTROLLER REACHED')
   try {
     const email = typeof request.body?.email === 'string'
       ? request.body.email.trim().toLowerCase()

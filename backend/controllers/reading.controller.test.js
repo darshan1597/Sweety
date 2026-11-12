@@ -31,3 +31,4 @@ describe('reading validation', () => {
     expect(normalizeReading({ date: ' 2026-10-15 ', slot: ' after_lunch ', value: 118 })).toEqual(validReading)
   })
 })
+
