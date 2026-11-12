@@ -1,10 +1,5 @@
 import { Router } from 'express'
-import {
-  getCurrentUser,
-  login,
-  logout,
-  register,
-} from '../controllers/auth.controller.js'
+import {getCurrentUser, login, logout, register,} from '../controllers/auth.controller.js'
 import isAuth from '../middlewares/isAuth.js'
 
 const authRouter = Router()

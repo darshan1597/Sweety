@@ -1,11 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { createUser, findUserByEmail } from '../models/user.model.js'
-import {
-  AUTH_COOKIE_NAME,
-  createAuthToken,
-  getAuthCookieOptions,
-  getClearCookieOptions,
-} from '../utils/token.js'
+import {AUTH_COOKIE_NAME, createAuthToken, getAuthCookieOptions, getClearCookieOptions,} from '../utils/token.js'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
